@@ -94,7 +94,7 @@ public MemoryImage loadImageFromFile(T : const(char)[])(T filename) {
 
                 GC.free(data.ptr);
             } // this should be safe, as image will copy data to it's internal storage
-            fl.rawReadExact(data);
+            fl.rawRead(data);
             return loadImageFromMemory(data);
         case ImageFileFormat.Png:
             static if (is(T == string))
