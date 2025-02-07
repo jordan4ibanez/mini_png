@@ -144,11 +144,11 @@ struct Color {
     }
 
 @safe:
-    /++
+    /**
 		The color components are available as a static array, individual bytes, and a uint inside this union.
 
 		Since it is anonymous, you can use the inner members' names directly.
-	+/
+	*/
     union {
         ubyte[4] components; /// [r, g, b, a]
 
@@ -163,11 +163,11 @@ struct Color {
         uint asUint; /// The components as a single 32 bit value (beware of endian issues!)
     }
 
-    /++
+    /**
 		Returns a value compatible with [https://docs.microsoft.com/en-us/windows/win32/gdi/colorref|a Win32 COLORREF].
 
 		Please note that the alpha value is lost in translation.
-	+/
+	*/
     nothrow pure @nogc
     uint asWindowsColorRef() {
         uint cr;
@@ -177,17 +177,17 @@ struct Color {
         return cr;
     }
 
-    /++
+    /**
 		Constructs a Color from [https://docs.microsoft.com/en-us/windows/win32/gdi/colorref|a Win32 COLORREF].
-	+/
+	*/
     nothrow pure @nogc
     static Color fromWindowsColorRef(uint cr) {
         return Color(cr & 0xff, (cr >> 8) & 0xff, (cr >> 16) & 0xff);
     }
 
-    /++
+    /**
 		Like the constructor, but this makes sure they are in range before casting. If they are out of range, it saturates: anything less than zero becomes zero and anything greater than 255 becomes 255.
-	+/
+	*/
     nothrow pure @nogc
     static Color fromIntegers(int red, int green, int blue, int alpha = 255) {
         return Color(clampToByte(red), clampToByte(green), clampToByte(blue), clampToByte(alpha));
@@ -202,9 +202,9 @@ struct Color {
         this.a = cast(ubyte) alpha;
     }
 
-    /++
+    /**
 		Construct a color from components[0 .. 4]. It must have length of at least 4 and be in r, g, b, a order.
-	+/
+	*/
     nothrow pure @nogc
     this(ubyte[] components) {
         this.components[] = components[0 .. 4];
@@ -327,9 +327,9 @@ struct Color {
         throw new Exception("Unknown color " ~ s);
     }
 
-    /++
+    /**
 		Reads a CSS style string to get the color. Understands #rrggbb, rgba(), hsl(), and rrggbbaa
-	+/
+	*/
     static Color fromString(scope const(char)[] s) {
         s = s.stripInternal();
 
@@ -1414,9 +1414,9 @@ pure const nothrow @safe @nogc:
                 r.bottom - 1) < top);
     }
 
-    /++
+    /**
 		Returns a Rectangle representing the intersection of this and the other given one.
-	+/
+	*/
     Rectangle intersectionOf(in Rectangle r) {
         auto tmp = Rectangle(max(left, r.left), max(top, r.top), min(right, r.right), min(bottom, r
                 .bottom));
@@ -1435,7 +1435,7 @@ private int min(int a, int b) @nogc nothrow pure @safe {
     return a <= b ? a : b;
 }
 
-/++
+/**
 	Implements a flood fill algorithm, like the bucket tool in
 	MS Paint.
 
@@ -1450,7 +1450,7 @@ private int min(int a, int b) @nogc nothrow pure @safe {
 		x = the x-coordinate to start the fill (think of where the user clicked in Paint)
 		y = the y-coordinate to start the fill
 		additionalCheck = A custom additional check to perform on each square before continuing. Returning true means keep flooding, returning false means stop. If null, it is not used.
-+/
+*/
 void floodFill(T)(
     T[] what, int width, int height, // the canvas to inspect
     T target, T replacement, // fill params
