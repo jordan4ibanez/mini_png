@@ -598,7 +598,6 @@ private ubyte fromHexInternal(in char[] s) {
     int result = 0;
 
     int exp = 1;
-    //foreach(c; retro(s)) { // FIXME: retro doesn't work right in dtojs
     foreach_reverse (c; s) {
         if (c >= 'A' && c <= 'F')
             result += exp * (c - 'A' + 10);
@@ -1190,8 +1189,8 @@ class TrueColorImage : MemoryImage {
 
     /// .
     Data imageData;
-    
-    alias imageData.bytes data;
+
+    alias data = imageData.bytes;
 
     int _width;
     int _height;
@@ -1336,7 +1335,8 @@ class TrueColorImageWithoutAlpha : MemoryImage {
 }
 +/
 
-alias extern (C) int function(scope const void*, scope const void*) @system Comparator;
+alias Comparator = extern (C) int function(scope const void*, scope const void*) @system;
+
 @trusted void nonPhobosSort(T)(T[] obj, Comparator comparator) {
     import core.stdc.stdlib;
 
@@ -1398,7 +1398,7 @@ do {
     // This is probably really slow.... but meh it gives pretty good results.
 
     auto ddiff = 32;
-    outer: for (int d1 = 128; d1 >= 0; d1 -= ddiff) {
+    for (int d1 = 128; d1 >= 0; d1 -= ddiff) {
         auto minDist = d1 * d1;
         if (d1 <= 64)
             ddiff = 16;
