@@ -1349,13 +1349,13 @@ alias Comparator = extern (C) int function(scope const void*, scope const void*)
 /// After quantizing the image, it applies a dithering algorithm.
 ///
 /// This is not written for speed.
-IndexedImage quantize(in TrueColorImage img, Color[] palette = null, in int maxColors = 256) // this is just because IndexedImage assumes ubyte palette values
+IndexedImage quantize(in TrueColorImage oldImage, Color[] palette = null, in int maxColors = 256) // this is just because IndexedImage assumes ubyte palette values
 in {
     assert(maxColors <= 256);
 }
 do {
     int[Color] uses;
-    foreach (pixel; img.imageData.colors) {
+    foreach (pixel; oldImage.imageData.colors) {
         if (auto i = pixel in uses) {
             (*i)++;
         } else {
@@ -1435,9 +1435,9 @@ do {
     }
 
     bool wasPerfect = true;
-    auto newImage = new IndexedImage(img.width, img.height);
+    auto newImage = new IndexedImage(oldImage.width, oldImage.height);
     newImage.palette = palette;
-    foreach (idx, pixel; img.imageData.colors) {
+    foreach (idx, pixel; oldImage.imageData.colors) {
         if (auto p = pixel in paletteAssignments)
             newImage.data[idx] = *p;
         else {
@@ -1448,7 +1448,7 @@ do {
     }
 
     if (!wasPerfect)
-        floydSteinbergDither(newImage, img);
+        floydSteinbergDither(newImage, oldImage);
 
     return newImage;
 }
