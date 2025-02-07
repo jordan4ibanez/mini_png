@@ -1,9 +1,6 @@
 module color;
 
 @safe:
-
-// importing phobos explodes the size of this code 10x, so not doing it.
-
 private {
     double toInternal(T)(scope const(char)[] s) {
         double accumulator = 0.0;
@@ -139,8 +136,6 @@ private {
     }
 }
 
-// done with mini-phobos
-
 /// Represents an RGBA color
 struct Color {
 
@@ -233,57 +228,57 @@ struct Color {
     static Color transparent() {
         return Color(0, 0, 0, 0);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color white() {
         return Color(255, 255, 255);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color gray() {
         return Color(128, 128, 128);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color black() {
         return Color(0, 0, 0);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color red() {
         return Color(255, 0, 0);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color green() {
         return Color(0, 255, 0);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color blue() {
         return Color(0, 0, 255);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color yellow() {
         return Color(255, 255, 0);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color teal() {
         return Color(0, 255, 255);
     }
-    /// Ditto
+    
     nothrow pure @nogc
     static Color purple() {
         return Color(128, 0, 128);
     }
-    /// Ditto
+
     nothrow pure @nogc
     static Color magenta() {
         return Color(255, 0, 255);
     }
-    /// Ditto
+
     nothrow pure @nogc
     static Color brown() {
         return Color(128, 64, 0);
@@ -1472,72 +1467,6 @@ ubyte findNearestColor(in Color[] palette, in Color pixel) nothrow pure @trusted
     return cast(ubyte) best;
 }
 
-/+
-
-// Quantizing and dithering test program
-
-void main( ){
-/*
-	auto img = new TrueColorImage(256, 32);
-	foreach(y; 0 .. img.height) {
-		foreach(x; 0 .. img.width) {
-			img.imageData.colors[x + y * img.width] = Color(x, y * (255 / img.height), 0);
-		}
-	}
-*/
-
-TrueColorImage img;
-
-{
-
-import arsd.png;
-
-struct P {
-	ubyte[] range;
-	void put(ubyte[] a) { range ~= a; }
-}
-
-P range;
-import std.algorithm;
-
-import std.stdio;
-writePngLazy(range, pngFromBytes(File("/home/me/nyesha.png").byChunk(4096)).byRgbaScanline.map!((line) {
-	foreach(ref pixel; line.pixels) {
-	continue;
-		auto sum = cast(int) pixel.r + pixel.g + pixel.b;
-		ubyte a = cast(ubyte)(sum / 3);
-		pixel.r = a;
-		pixel.g = a;
-		pixel.b = a;
-	}
-	return line;
-}));
-
-img = imageFromPng(readPng(range.range)).getAsTrueColorImage;
-
-
-}
-
-
-
-	auto qimg = quantize(img, null, 2);
-
-	import arsd.simpledisplay;
-	auto win = new SimpleWindow(img.width, img.height * 3);
-	auto painter = win.draw();
-	painter.drawImage(Point(0, 0), Image.fromMemoryImage(img));
-	painter.drawImage(Point(0, img.height), Image.fromMemoryImage(qimg));
-	floydSteinbergDither(qimg, img);
-	painter.drawImage(Point(0, img.height * 2), Image.fromMemoryImage(qimg));
-	win.eventLoop(0);
-}
-+/
-
-/+
-/// If the background is transparent, it simply erases the alpha channel.
-void removeTransparency(IndexedImage img, Color background)
-+/
-
 /// Perform alpha-blending of `fore` to this color, return new color.
 /// WARNING! This function does blending in RGB space, and RGB space is not linear!
 Color alphaBlend(Color foreground, Color background) pure nothrow @safe @nogc {
@@ -1550,13 +1479,6 @@ Color alphaBlend(Color foreground, Color background) pure nothrow @safe @nogc {
         pragma(inline, true);
     return background.alphaBlend(foreground);
 }
-
-/*
-/// Reduces the number of colors in a palette.
-void reducePaletteSize(IndexedImage img, int maxColors = 16) {
-
-}
-*/
 
 // I think I did this wrong... but the results aren't too bad so the bug can't be awful.
 /// Dithers img in place to look more like original.
@@ -1704,7 +1626,7 @@ pure const nothrow @safe @nogc:
         return contains(r.upperLeft) && contains(r.lowerRight);
     }
 
-    /// ditto
+    
     bool contains(in Point p) {
         return (p.x >= left && p.x < right && p.y >= top && p.y < bottom);
     }
@@ -1815,27 +1737,4 @@ void floodFill(T)(
             w.x++;
         }
     }
-
-    /+
-	what[y * width + x] = replacement;
-
-	if(x)
-		floodFill(what, width, height, target, replacement,
-			x - 1, y, additionalCheck);
-
-	if(x != width - 1)
-		floodFill(what, width, height, target, replacement,
-			x + 1, y, additionalCheck);
-
-	if(y)
-		floodFill(what, width, height, target, replacement,
-			x, y - 1, additionalCheck);
-
-	if(y != height - 1)
-		floodFill(what, width, height, target, replacement,
-			x, y + 1, additionalCheck);
-	+/
 }
-
-// for scripting, so you can tag it without strictly needing to import arsd.jsvar
-enum arsd_jsvar_compatible = "arsd_jsvar_compatible";
