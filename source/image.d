@@ -14,7 +14,7 @@ module image;
 	History:
 		The image resize code used to live directly in here, but has now moved to a new module, [arsd.imageresize]. It is public imported here for compatibility, but the build has changed as of December 25, 2020.
 +/
-public import arsd.color;
+public import color;
 public import arsd.png;
 
 public import arsd.imageresize;
