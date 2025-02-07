@@ -814,46 +814,6 @@ Color setSaturation(Color c, double saturation) nothrow pure @safe @nogc {
     return fromHsl(hsl);
 }
 
-/*
-void main(string[] args) {
-	auto color1 = toHsl(Color(255, 0, 0));
-	auto color = fromHsl(color1[0] + 60, color1[1], color1[2]);
-
-	writefln("#%02x%02x%02x", color.r, color.g, color.b);
-}
-*/
-
-/* Color algebra functions */
-
-/* Alpha putpixel looks like this:
-
-void putPixel(Image i, Color c) {
-	Color b;
-	b.r = i.data[(y * i.width + x) * bpp + 0];
-	b.g = i.data[(y * i.width + x) * bpp + 1];
-	b.b = i.data[(y * i.width + x) * bpp + 2];
-	b.a = i.data[(y * i.width + x) * bpp + 3];
-
-	float ca = cast(float) c.a / 255;
-
-	i.data[(y * i.width + x) * bpp + 0] = alpha(c.r, ca, b.r);
-	i.data[(y * i.width + x) * bpp + 1] = alpha(c.g, ca, b.g);
-	i.data[(y * i.width + x) * bpp + 2] = alpha(c.b, ca, b.b);
-	i.data[(y * i.width + x) * bpp + 3] = alpha(c.a, ca, b.a);
-}
-
-ubyte alpha(ubyte c1, float alpha, ubyte onto) {
-	auto got = (1 - alpha) * onto + alpha * c1;
-
-	if(got > 255)
-		return 255;
-	return cast(ubyte) got;
-}
-
-So, given the background color and the resultant color, what was
-composited on to it?
-*/
-
 ubyte unalpha(ubyte colorYouHave, float alpha, ubyte backgroundColor) nothrow pure @safe @nogc {
     // resultingColor = (1-alpha) * backgroundColor + alpha * answer
     auto resultingColorf = cast(float) colorYouHave;
@@ -916,48 +876,6 @@ Color colorFromString(string s) {
 
     return c;
 }
-
-/*
-import browser.window;
-import std.conv;
-void main() {
-	import browser.document;
-	foreach(ele; document.querySelectorAll("input")) {
-		ele.addEventListener("change", {
-			auto h = toInternal!double(document.querySelector("input[name=h]").value);
-			auto s = toInternal!double(document.querySelector("input[name=s]").value);
-			auto l = toInternal!double(document.querySelector("input[name=l]").value);
-
-			Color c = Color.fromHsl(h, s, l);
-
-			auto e = document.getElementById("example");
-			e.style.backgroundColor = c.toCssString();
-
-			// JSElement __js_this;
-			// __js_this.style.backgroundColor = c.toCssString();
-		}, false);
-	}
-}
-*/
-
-/**
-	This provides two image classes and a bunch of functions that work on them.
-
-	Why are they separate classes? I think the operations on the two of them
-	are necessarily different. There's a whole bunch of operations that only
-	really work on truecolor (blurs, gradients), and a few that only work
-	on indexed images (palette swaps).
-
-	Even putpixel is pretty different. On indexed, it is a palette entry's
-	index number. On truecolor, it is the actual color.
-
-	A greyscale image is the weird thing in the middle. It is truecolor, but
-	fits in the same size as indexed. Still, I'd say it is a specialization
-	of truecolor.
-
-	There is a subset that works on both
-
-*/
 
 /// An image in memory
 interface MemoryImage {
@@ -1086,12 +1004,6 @@ class IndexedImage : MemoryImage {
         data = new ubyte[cast(size_t) w * h];
     }
 
-    /*
-	void resize(int w, int h, bool scale) {
-
-	}
-	*/
-
     /// returns a new image
     override TrueColorImage getAsTrueColorImage() pure nothrow @safe {
         return convertToTrueColor();
@@ -1134,10 +1046,6 @@ class IndexedImage : MemoryImage {
 
 /// An RGBA array of image data. Use the free function quantize() to convert to an IndexedImage
 class TrueColorImage : MemoryImage {
-    //	bool hasAlpha;
-    //	bool isGreyscale;
-
-    //ubyte[] data; // stored as rgba quads, upper left to right to bottom
 
     struct Data {
         ubyte[] bytes; /// the data as rgba bytes. Stored left to right, top to bottom, no padding.
@@ -1224,78 +1132,6 @@ class TrueColorImage : MemoryImage {
         return this;
     }
 }
-
-/+
-/// An RGB array of image data.
-class TrueColorImageWithoutAlpha : MemoryImage {
-	struct Data {
-		ubyte[] bytes; // the data as rgba bytes. Stored left to right, top to bottom, no padding.
-	}
-
-	
-	Data imageData;
-
-	int _width;
-	int _height;
-
-	override void clearInternal () nothrow @system {// @nogc {
-		import core.memory : GC;
-		// it is safe to call [GC.free] with `null` pointer.
-		GC.free(imageData.bytes.ptr); imageData.bytes = null;
-		_width = _height = 0;
-	}
-
-	
-	override TrueColorImageWithoutAlpha clone() const pure nothrow @trusted {
-		auto n = new TrueColorImageWithoutAlpha(width, height);
-		n.imageData.bytes[] = this.imageData.bytes[]; // copy into existing array ctor allocated
-		return n;
-	}
-
-	
-	override int width() const pure nothrow @trusted @nogc { return _width; }
-	///.
-	override int height() const pure nothrow @trusted @nogc { return _height; }
-
-	override Color getPixel(int x, int y) const pure nothrow @trusted @nogc {
-		if (x >= 0 && y >= 0 && x < _width && y < _height) {
-			uint pos = (y*_width+x) * 3;
-			return Color(imageData.bytes[0], imageData.bytes[1], imageData.bytes[2], 255);
-		} else {
-			return Color(0, 0, 0, 0);
-		}
-	}
-
-	override void setPixel(int x, int y, in Color clr) nothrow @trusted {
-		if (x >= 0 && y >= 0 && x < _width && y < _height) {
-			uint pos = y*_width+x;
-			//if (pos < imageData.bytes.length/4) imageData.colors.ptr[pos] = clr;
-			// FIXME
-		}
-	}
-
-	
-	this(int w, int h) pure nothrow @safe {
-		_width = w;
-		_height = h;
-		imageData.bytes = new ubyte[w*h*3];
-	}
-
-	/// Creates with existing data. The data pointer is stored here.
-	this(int w, int h, ubyte[] data) pure nothrow @safe {
-		_width = w;
-		_height = h;
-		assert(data.length == w * h * 3);
-		imageData.bytes = data;
-	}
-
-	///
-	override TrueColorImage getAsTrueColorImage() pure nothrow @safe {
-		// FIXME
-		//return this;
-	}
-}
-+/
 
 alias Comparator = extern (C) int function(scope const void*, scope const void*) @system;
 
@@ -1495,10 +1331,10 @@ void floydSteinbergDither(IndexedImage img, in TrueColorImage original) nothrow 
 
 // these are just really useful in a lot of places where the color/image functions are used,
 // so I want them available with Color
-///
+
 struct Point {
-    int x; ///
-    int y; ///
+    int x;
+    int y;
 
 pure const nothrow @safe:
 
@@ -1511,26 +1347,23 @@ pure const nothrow @safe:
     }
 }
 
-///
 struct Size {
-    int width; ///
-    int height; ///
+    int width;
+    int height;
 
     int area() pure nothrow @safe const @nogc {
         return width * height;
     }
 }
 
-///
 struct Rectangle {
-    int left; ///
-    int top; ///
-    int right; ///
-    int bottom; ///
+    int left;
+    int top;
+    int right;
+    int bottom;
 
 pure const nothrow @safe @nogc:
 
-    ///
     this(int left, int top, int right, int bottom) {
         this.left = left;
         this.top = top;
@@ -1538,52 +1371,42 @@ pure const nothrow @safe @nogc:
         this.bottom = bottom;
     }
 
-    ///
     this(in Point upperLeft, in Point lowerRight) {
         this(upperLeft.x, upperLeft.y, lowerRight.x, lowerRight.y);
     }
 
-    ///
     this(in Point upperLeft, in Size size) {
         this(upperLeft.x, upperLeft.y, upperLeft.x + size.width, upperLeft.y + size.height);
     }
 
-    ///
     @property Point upperLeft() {
         return Point(left, top);
     }
 
-    ///
     @property Point upperRight() {
         return Point(right, top);
     }
 
-    ///
     @property Point lowerLeft() {
         return Point(left, bottom);
     }
 
-    ///
     @property Point lowerRight() {
         return Point(right, bottom);
     }
 
-    ///
     @property Point center() {
         return Point((right + left) / 2, (bottom + top) / 2);
     }
 
-    ///
     @property Size size() {
         return Size(width, height);
     }
 
-    ///
     @property int width() {
         return right - left;
     }
 
-    ///
     @property int height() {
         return bottom - top;
     }
@@ -1606,9 +1429,6 @@ pure const nothrow @safe @nogc:
 
     /++
 		Returns a Rectangle representing the intersection of this and the other given one.
-
-		History:
-			Added July 1, 2021
 	+/
     Rectangle intersectionOf(in Rectangle r) {
         auto tmp = Rectangle(max(left, r.left), max(top, r.top), min(right, r.right), min(bottom, r
@@ -1647,10 +1467,8 @@ private int min(int a, int b) @nogc nothrow pure @safe {
 void floodFill(T)(
     T[] what, int width, int height, // the canvas to inspect
     T target, T replacement, // fill params
-    int x, int y, bool delegate(int x, int y) @safe additionalCheck) // the node
-
-// in(what.length == width * height) // gdc doesn't support this syntax yet so not gonna use it until that comes out.
-{
+    int x, int y, bool delegate(int x, int y) @safe additionalCheck) { // the node
+    
     assert(what.length == width * height); // will use the contract above when gdc supports it
 
     T node = what[y * width + x];
