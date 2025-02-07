@@ -167,11 +167,6 @@ struct Color {
 		Returns a value compatible with [https://docs.microsoft.com/en-us/windows/win32/gdi/colorref|a Win32 COLORREF].
 
 		Please note that the alpha value is lost in translation.
-
-		History:
-			Added November 27, 2021 (dub v10.4)
-		See_Also:
-			[fromWindowsColorRef]
 	+/
     nothrow pure @nogc
     uint asWindowsColorRef() {
@@ -184,11 +179,6 @@ struct Color {
 
     /++
 		Constructs a Color from [https://docs.microsoft.com/en-us/windows/win32/gdi/colorref|a Win32 COLORREF].
-
-		History:
-			Added November 27, 2021 (dub v10.4)
-		See_Also:
-			[asWindowsColorRef]
 	+/
     nothrow pure @nogc
     static Color fromWindowsColorRef(uint cr) {
@@ -228,47 +218,47 @@ struct Color {
     static Color transparent() {
         return Color(0, 0, 0, 0);
     }
-    
+
     nothrow pure @nogc
     static Color white() {
         return Color(255, 255, 255);
     }
-    
+
     nothrow pure @nogc
     static Color gray() {
         return Color(128, 128, 128);
     }
-    
+
     nothrow pure @nogc
     static Color black() {
         return Color(0, 0, 0);
     }
-    
+
     nothrow pure @nogc
     static Color red() {
         return Color(255, 0, 0);
     }
-    
+
     nothrow pure @nogc
     static Color green() {
         return Color(0, 255, 0);
     }
-    
+
     nothrow pure @nogc
     static Color blue() {
         return Color(0, 0, 255);
     }
-    
+
     nothrow pure @nogc
     static Color yellow() {
         return Color(255, 255, 0);
     }
-    
+
     nothrow pure @nogc
     static Color teal() {
         return Color(0, 255, 255);
     }
-    
+
     nothrow pure @nogc
     static Color purple() {
         return Color(128, 0, 128);
@@ -298,15 +288,8 @@ struct Color {
         b = cast(ubyte)(b * 255 / a);
     }
 
-    /*
-	ubyte[4] toRgbaArray() {
-		return [r,g,b,a];
-	}
-	*/
-
     /// Return black-and-white color
     Color toBW()() nothrow pure @safe @nogc {
-        // FIXME: gamma?
         int intens = clampToByte(cast(int)(0.2126 * r + 0.7152 * g + 0.0722 * b));
         return Color(intens, intens, intens, a);
     }
@@ -366,8 +349,6 @@ struct Color {
                     return __traits(getMember, Color, member);
             }
         }
-
-        // try various notations borrowed from CSS (though a little extended)
 
         // hsl(h,s,l,a) where h is degrees and s,l,a are 0 >= x <= 1.0
         if (s.startsWithInternal("hsl(") || s.startsWithInternal("hsla(")) {
@@ -600,7 +581,7 @@ private ubyte fromHexInternal(in char[] s) {
             result += exp * (c - 'a' + 10);
         else if (c >= '0' && c <= '9')
             result += exp * (c - '0');
-        else // throw new Exception("invalid hex character: " ~ cast(char) c);
+        else
             return 0;
 
         exp *= 16;
@@ -680,7 +661,12 @@ double srgbToLinearRgb(double u) {
         return ((u + 0.055) / 1.055) ^^ 2.4;
 }
 
-/// Converts an RGB color into an HSL triplet. useWeightedLightness will try to get a better value for luminosity for the human eye, which is more sensitive to green than red and more to red than blue. If it is false, it just does average of the rgb.
+/*
+Converts an RGB color into an HSL triplet. 
+useWeightedLightness will try to get a better value for luminosity for the human eye, 
+which is more sensitive to green than red and more to red than blue. 
+If it is false, it just does average of the rgb.
+*/
 double[3] toHsl(Color c, bool useWeightedLightness = false) nothrow pure @trusted @nogc {
     double r1 = cast(double) c.r / 255;
     double g1 = cast(double) c.g / 255;
@@ -722,7 +708,6 @@ double[3] toHsl(Color c, bool useWeightedLightness = false) nothrow pure @truste
     return [H, S, L];
 }
 
-/// .
 Color lighten(Color c, double percentage) nothrow pure @safe @nogc {
     auto hsl = toHsl(c);
     hsl[2] *= (1 + percentage);
@@ -731,7 +716,6 @@ Color lighten(Color c, double percentage) nothrow pure @safe @nogc {
     return fromHsl(hsl);
 }
 
-/// .
 Color darken(Color c, double percentage) nothrow pure @safe @nogc {
     auto hsl = toHsl(c);
     hsl[2] *= (1 - percentage);
@@ -798,28 +782,24 @@ Color setLightness(Color c, double lightness) nothrow pure @safe @nogc {
     return fromHsl(hsl);
 }
 
-///
 Color rotateHue(Color c, double degrees) nothrow pure @safe @nogc {
     auto hsl = toHsl(c);
     hsl[0] += degrees;
     return fromHsl(hsl);
 }
 
-///
 Color setHue(Color c, double hue) nothrow pure @safe @nogc {
     auto hsl = toHsl(c);
     hsl[0] = hue;
     return fromHsl(hsl);
 }
 
-///
 Color desaturate(Color c, double percentage) nothrow pure @safe @nogc {
     auto hsl = toHsl(c);
     hsl[1] *= (1 - percentage);
     return fromHsl(hsl);
 }
 
-///
 Color saturate(Color c, double percentage) nothrow pure @safe @nogc {
     auto hsl = toHsl(c);
     hsl[1] *= (1 + percentage);
@@ -828,7 +808,6 @@ Color saturate(Color c, double percentage) nothrow pure @safe @nogc {
     return fromHsl(hsl);
 }
 
-///
 Color setSaturation(Color c, double saturation) nothrow pure @safe @nogc {
     auto hsl = toHsl(c);
     hsl[1] = saturation;
@@ -875,7 +854,6 @@ So, given the background color and the resultant color, what was
 composited on to it?
 */
 
-///
 ubyte unalpha(ubyte colorYouHave, float alpha, ubyte backgroundColor) nothrow pure @safe @nogc {
     // resultingColor = (1-alpha) * backgroundColor + alpha * answer
     auto resultingColorf = cast(float) colorYouHave;
@@ -885,7 +863,6 @@ ubyte unalpha(ubyte colorYouHave, float alpha, ubyte backgroundColor) nothrow pu
     return Color.clampToByte(cast(int) answer);
 }
 
-///
 ubyte makeAlpha(ubyte colorYouHave, ubyte backgroundColor /*, ubyte foreground = 0x00*/ ) nothrow pure @safe @nogc {
     //auto foregroundf = cast(float) foreground;
     auto foregroundf = 0.00f;
@@ -920,7 +897,6 @@ int fromHex(string s) {
     return result;
 }
 
-///
 Color colorFromString(string s) {
     if (s.length == 0)
         return Color(0, 0, 0, 255);
@@ -1036,7 +1012,6 @@ interface MemoryImage {
 class IndexedImage : MemoryImage {
     bool hasAlpha;
 
-    /// .
     Color[] palette;
     /// the data as indexes into the palette. Stored left to right, top to bottom, no padding.
     ubyte[] data;
@@ -1052,17 +1027,14 @@ class IndexedImage : MemoryImage {
         _width = _height = 0;
     }
 
-    /// .
     override int width() const pure nothrow @safe @nogc {
         return _width;
     }
 
-    /// .
     override int height() const pure nothrow @safe @nogc {
         return _height;
     }
 
-    /// .
     override IndexedImage clone() const pure nothrow @trusted {
         auto n = new IndexedImage(width, height);
         n.data[] = this.data[]; // the data member is already there, so array copy
@@ -1104,7 +1076,6 @@ class IndexedImage : MemoryImage {
     private int _width;
     private int _height;
 
-    /// .
     this(int w, int h) pure nothrow @safe {
         _width = w;
         _height = h;
@@ -1167,7 +1138,7 @@ class TrueColorImage : MemoryImage {
     //	bool isGreyscale;
 
     //ubyte[] data; // stored as rgba quads, upper left to right to bottom
-    /// .
+
     struct Data {
         ubyte[] bytes; /// the data as rgba bytes. Stored left to right, top to bottom, no padding.
         // the union is no good because the length of the struct is wrong!
@@ -1182,7 +1153,6 @@ class TrueColorImage : MemoryImage {
         static assert(Color.sizeof == 4);
     }
 
-    /// .
     Data imageData;
 
     alias data = imageData.bytes;
@@ -1199,14 +1169,12 @@ class TrueColorImage : MemoryImage {
         _width = _height = 0;
     }
 
-    /// .
     override TrueColorImage clone() const pure nothrow @trusted {
         auto n = new TrueColorImage(width, height);
         n.imageData.bytes[] = this.imageData.bytes[]; // copy into existing array ctor allocated
         return n;
     }
 
-    /// .
     override int width() const pure nothrow @trusted @nogc {
         return _width;
     }
@@ -1232,7 +1200,6 @@ class TrueColorImage : MemoryImage {
         }
     }
 
-    /// .
     this(int w, int h) pure nothrow @safe {
         _width = w;
         _height = h;
@@ -1265,7 +1232,7 @@ class TrueColorImageWithoutAlpha : MemoryImage {
 		ubyte[] bytes; // the data as rgba bytes. Stored left to right, top to bottom, no padding.
 	}
 
-	/// .
+	
 	Data imageData;
 
 	int _width;
@@ -1278,14 +1245,14 @@ class TrueColorImageWithoutAlpha : MemoryImage {
 		_width = _height = 0;
 	}
 
-	/// .
+	
 	override TrueColorImageWithoutAlpha clone() const pure nothrow @trusted {
 		auto n = new TrueColorImageWithoutAlpha(width, height);
 		n.imageData.bytes[] = this.imageData.bytes[]; // copy into existing array ctor allocated
 		return n;
 	}
 
-	/// .
+	
 	override int width() const pure nothrow @trusted @nogc { return _width; }
 	///.
 	override int height() const pure nothrow @trusted @nogc { return _height; }
@@ -1307,7 +1274,7 @@ class TrueColorImageWithoutAlpha : MemoryImage {
 		}
 	}
 
-	/// .
+	
 	this(int w, int h) pure nothrow @safe {
 		_width = w;
 		_height = h;
@@ -1626,7 +1593,6 @@ pure const nothrow @safe @nogc:
         return contains(r.upperLeft) && contains(r.lowerRight);
     }
 
-    
     bool contains(in Point p) {
         return (p.x >= left && p.x < right && p.y >= top && p.y < bottom);
     }
