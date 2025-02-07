@@ -204,9 +204,6 @@ struct Color {
 
     /++
 		Construct a color from components[0 .. 4]. It must have length of at least 4 and be in r, g, b, a order.
-
-		History:
-			Added July 18, 2022 (dub v10.9)
 	+/
     nothrow pure @nogc
     this(ubyte[] components) {
@@ -332,9 +329,6 @@ struct Color {
 
     /++
 		Reads a CSS style string to get the color. Understands #rrggbb, rgba(), hsl(), and rrggbbaa
-
-		History:
-			The short-form hex string parsing (`#fff`) was added on April 10, 2020. (v7.2.0)
 	+/
     static Color fromString(scope const(char)[] s) {
         s = s.stripInternal();
