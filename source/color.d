@@ -13,9 +13,9 @@ private {
                 i = idx + 1;
                 break;
             } else {
-                string wtfIsWrongWithThisStupidLanguageWithItsBrokenSafeAttribute = "bad char to make double from ";
-                wtfIsWrongWithThisStupidLanguageWithItsBrokenSafeAttribute ~= s;
-                throw new Exception(wtfIsWrongWithThisStupidLanguageWithItsBrokenSafeAttribute);
+                string thrower = "bad char to make double from ";
+                thrower ~= s;
+                throw new Exception(thrower);
             }
         }
 
@@ -27,9 +27,9 @@ private {
                 accumulator2 += c - '0';
                 count *= 10;
             } else {
-                string wtfIsWrongWithThisStupidLanguageWithItsBrokenSafeAttribute = "bad char to make double from ";
-                wtfIsWrongWithThisStupidLanguageWithItsBrokenSafeAttribute ~= s;
-                throw new Exception(wtfIsWrongWithThisStupidLanguageWithItsBrokenSafeAttribute);
+                string thrower = "bad char to make double from ";
+                thrower ~= s;
+                throw new Exception(thrower);
             }
         }
 
@@ -1468,7 +1468,7 @@ void floodFill(T)(
     T[] what, int width, int height, // the canvas to inspect
     T target, T replacement, // fill params
     int x, int y, bool delegate(int x, int y) @safe additionalCheck) { // the node
-    
+
     assert(what.length == width * height); // will use the contract above when gdc supports it
 
     T node = what[y * width + x];
