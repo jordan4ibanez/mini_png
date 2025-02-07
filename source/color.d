@@ -907,14 +907,7 @@ interface MemoryImage {
     }
 
     // ***This method is deliberately not publicly documented.***
-    // What it does is unconditionally frees internal image storage, without any sanity checks.
-    // If you will do this, make sure that you have no references to image data left (like
-    // slices of [data] array, for example). Those references will become invalid, and WILL
-    // lead to Undefined Behavior.
-    // tl;dr: IF YOU HAVE *ANY* QUESTIONS REGARDING THIS COMMENT, DON'T USE THIS!
-    // Note to implementors: it is safe to simply do nothing in this method.
-    // Also, it should be safe to call this method twice or more.
-    void clearInternal() nothrow @system; // @nogc; // nogc is commented right now just because GC.free is only @nogc in newest dmd and i want to stay compatible a few versions back too. it can be added later
+    void clearInternal() nothrow @system;
 
     /// Convenient alias for `fromImage`
     alias fromImageFile = fromImage;
