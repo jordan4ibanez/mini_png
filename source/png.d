@@ -3,6 +3,7 @@ module png;
 public import color;
 import core.memory;
 import std.exception;
+import std.math;
 import std.range;
 import std.string;
 import std.traits;
@@ -1170,9 +1171,7 @@ uint update_crc(in uint crc, in ubyte[] buf) {
 }
 
 /+
-	Figures out the crc for a chunk. Used internally.
-
-	lol is just the chunk name
+Figures out the crc for a chunk. Used internally.
 +/
 uint crc(in string lol, in ubyte[] buf) {
     uint c = update_crc(0xffffffffL, cast(ubyte[]) lol);
@@ -1333,8 +1332,6 @@ struct LazyPngChunks(T) if (isBufferedInputRange!(T) && is(ElementType!T == ubyt
 /// Lazily reads out basic info from a png (header, palette, image data)
 /// It will only allocate memory to read a palette, and only copies on
 /// the header and the palette. It ignores everything else.
-///
-/// FIXME: it doesn't handle interlaced files.
 struct LazyPngFile(LazyPngChunksProvider)
         if (isInputRange!(LazyPngChunksProvider) &&
         is(ElementType!(LazyPngChunksProvider) == Chunk)) {
@@ -1357,8 +1354,6 @@ struct LazyPngFile(LazyPngChunksProvider)
                 // if it is in color, palettes are
                 // always stored as 8 bit per channel
                 // RGB triplets Alpha is stored elsewhere.
-
-                // FIXME: doesn't do greyscale palettes!
 
                 enforce(chunk.size % 3 == 0);
                 palette.length = chunk.size / 3;
@@ -1425,7 +1420,7 @@ struct LazyPngFile(LazyPngChunksProvider)
                 this.chunks = chunks;
                 assert(chunkSize > 0);
                 buffer = (cast(ubyte*) malloc(chunkSize))[0 .. chunkSize];
-                pkbuf = (cast(ubyte*) malloc(32768))[0 .. 32768]; // arbitrary number
+                pkbuf = (cast(ubyte*) malloc(32_768))[0 .. 32_768]; // arbitrary number
                 zs = cast(z_stream*) malloc(z_stream.sizeof);
                 memset(zs, 0, z_stream.sizeof);
                 zs.avail_in = 0;
@@ -1671,10 +1666,6 @@ int bytesPerLineOfPng(ubyte depth, ubyte type, uint width) {
     return sizeInBytes + 1; // the +1 is for the filter byte that precedes all lines
 }
 
-/**************************************************
- * Buffered input range - generic, non-image code
-***************************************************/
-
 /// Is the given range a buffered input range? That is, an input range
 /// that also provides consumeFromFront(int) and appendToFront()
 ///
@@ -1685,15 +1676,6 @@ template isBufferedInputRange(R) {
         { R r; r.consumeFromFront(0); r.appendToFront(); }()));
 }
 
-/// Allows appending to front on a regular input range, if that range is
-/// an array. It appends to the array rather than creating an array of
-/// arrays; it's meant to make the illusion of one continuous front rather
-/// than simply adding capability to walk backward to an existing input range.
-///
-/// I think something like this should be standard; I find File.byChunk
-/// to be almost useless without this capability.
-
-// FIXME: what if Range is actually an array itself? We should just use
 // slices right into it... I guess maybe r.front() would be the whole
 // thing in that case though, so we would indeed be slicing in right now.
 // Gotta check it though.
@@ -1771,19 +1753,6 @@ struct BufferedInputRange(Range)
     }
 }
 
-/**************************************************
- * Lower level implementations of image formats.
- * and associated helper functions.
- *
- * Related to the module, but not particularly
- * interesting, so it's at the bottom.
-***************************************************/
-
-/* PNG file format implementation */
-
-//import std.zlib;
-import std.math;
-
 /// All PNG files are supposed to open with these bytes according to the spec
 static immutable(ubyte[]) PNG_MAGIC_NUMBER = [
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a
@@ -1858,16 +1827,6 @@ struct PngHeader {
     /// Height of the image, in pixels.
     uint height;
 
-    /**
-		This is bits per channel - per color for truecolor or grey
-		and per pixel for palette.
-
-		Indexed ones can have depth of 1,2,4, or 8,
-
-		Greyscale can be 1,2,4,8,16
-
-		Everything else must be 8 or 16.
-	*/
     ubyte depth = 8;
 
     /** Types from the PNG spec:
@@ -2020,7 +1979,7 @@ uint crcPng(in char[] chunkName, in ubyte[] buf) {
 }
 
 /++
-	Png files apply a filter to each line in the datastream, hoping to aid in compression. This undoes that as you load.
+Png files apply a filter to each line in the datastream, hoping to aid in compression. This undoes that as you load.
 +/
 immutable(ubyte)[] unfilter(ubyte filterType, in ubyte[] data, in ubyte[] previousLine, int bpp) {
     // Note: the overflow arithmetic on the ubytes in here is intentional
@@ -2059,7 +2018,7 @@ immutable(ubyte)[] unfilter(ubyte filterType, in ubyte[] data, in ubyte[] previo
             ubyte prev = i < bpp ? 0 : arr[i - bpp];
             ubyte prevLL = i < bpp ? 0 : (i < previousLine.length ? previousLine[i - bpp] : 0);
 
-            arr[i] += PaethPredictor(prev, (i < previousLine.length ? previousLine[i] : 0), prevLL);
+            arr[i] += paethPredictor(prev, (i < previousLine.length ? previousLine[i] : 0), prevLL);
         }
 
         return assumeUnique(arr);
@@ -2068,7 +2027,7 @@ immutable(ubyte)[] unfilter(ubyte filterType, in ubyte[] data, in ubyte[] previo
     }
 }
 
-ubyte PaethPredictor(ubyte a, ubyte b, ubyte c) {
+ubyte paethPredictor(ubyte a, ubyte b, ubyte c) {
     int p = cast(int) a + b - c;
     auto pa = abs(p - a);
     auto pb = abs(p - b);
@@ -2081,7 +2040,6 @@ ubyte PaethPredictor(ubyte a, ubyte b, ubyte c) {
     return c;
 }
 
-///
 int bytesPerPixel(PngHeader header) {
     immutable bitsPerChannel = header.depth;
 
