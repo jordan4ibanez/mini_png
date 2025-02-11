@@ -7,6 +7,7 @@ public import png;
 
 import core.memory;
 
+pragma(inline, true)
 private bool strEquCI(const(char)[] s0, const(char)[] s1) pure nothrow @trusted @nogc {
     if (s0.length != s1.length)
         return false;
