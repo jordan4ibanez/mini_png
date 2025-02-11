@@ -53,6 +53,7 @@ public ImageFileFormat guessImageFormatFromExtension(const(char)[] filename) @no
 }
 
 /// Try to guess image format by first data bytes.
+pragma(inline, true)
 public ImageFileFormat guessImageFormatFromMemory(const(void)[] membuf) {
     auto buf = cast(const(ubyte)[]) membuf;
     if (buf.length == 0)
