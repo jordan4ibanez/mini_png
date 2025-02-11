@@ -886,10 +886,10 @@ interface MemoryImage {
     int height() const pure nothrow @safe @nogc;
 
     /// Get image pixel. Slow, but returns valid RGBA color (completely transparent for off-image pixels).
-    Color getPixel(int x, int y) const pure nothrow @safe @nogc;
+    Color getPixel(immutable int x, immutable int y) const pure nothrow @safe @nogc;
 
     /// Set image pixel.
-    void setPixel(int x, int y, in Color clr) nothrow @safe;
+    void setPixel(immutable int x, immutable int y, in Color clr) nothrow @safe;
 
     /// Returns a copy of the image
     MemoryImage clone() const pure nothrow @safe;
@@ -948,7 +948,7 @@ class IndexedImage : MemoryImage {
         return n;
     }
 
-    override Color getPixel(int x, int y) const pure nothrow @trusted @nogc {
+    override Color getPixel(immutable int x, immutable int y) const pure nothrow @trusted @nogc {
         if (x >= 0 && y >= 0 && x < _width && y < _height) {
             size_t pos = cast(size_t) y * _width + x;
             if (pos >= data.length)
@@ -962,7 +962,7 @@ class IndexedImage : MemoryImage {
         }
     }
 
-    override void setPixel(int x, int y, in Color clr) nothrow @trusted {
+    override void setPixel(immutable int x, immutable int y, in Color clr) nothrow @trusted {
         if (x >= 0 && y >= 0 && x < _width && y < _height) {
             size_t pos = cast(size_t) y * _width + x;
             if (pos >= data.length)
