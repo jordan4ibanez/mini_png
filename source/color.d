@@ -1083,11 +1083,13 @@ class TrueColorImage : MemoryImage {
             size_t pos = cast(size_t) y * _width + x;
             return imageData.colors.ptr[pos];
         } else {
+    pragma(inline, true)
             return Color(0, 0, 0, 0);
         }
     }
 
     override void setPixel(int x, int y, in Color clr) nothrow @trusted {
+    pragma(inline, true)
         if (x >= 0 && y >= 0 && x < _width && y < _height) {
             size_t pos = cast(size_t) y * _width + x;
             if (pos < imageData.bytes.length / 4)
