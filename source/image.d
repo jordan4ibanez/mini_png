@@ -58,8 +58,8 @@ public ImageFileFormat guessImageFormatFromMemory(const(void)[] membuf) {
     immutable(ubyte)[] buf = cast(immutable(ubyte)[]) membuf;
     if (buf.length == 0) {
         return ImageFileFormat.Unknown;
-    // detect file format
-    // png
+    }
+    // Detect if PNG.
     if (buf.length > 7 && buf.ptr[0] == 0x89 && buf.ptr[1] == 0x50 && buf.ptr[2] == 0x4E &&
         buf.ptr[3] == 0x47 && buf.ptr[4] == 0x0D && buf.ptr[5] == 0x0A && buf.ptr[6] == 0x1A) {
         return ImageFileFormat.Png;
