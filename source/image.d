@@ -72,8 +72,10 @@ public MemoryImage loadImageFromFile(T : const(char)[])(T filename) {
     static if (is(T == typeof(null))) {
         throw new Exception("Cannot load image from unnamed file.");
     } else {
-        final switch (guessImageFormatFromExtension(filename)) {
-        case ImageFileFormat.Unknown:
+
+        immutable ImageFileFormat form = guessImageFormatFromExtension(filename);
+
+        if (form == ImageFileFormat.Unknown) {
 
             static if (is(T == string)) {
                 auto fl = File(filename);
@@ -94,12 +96,13 @@ public MemoryImage loadImageFromFile(T : const(char)[])(T filename) {
             } // this should be safe, as image will copy data to it's internal storage
             fl.rawRead(data);
             return loadImageFromMemory(data);
-        case ImageFileFormat.Png:
-            static if (is(T == string))
-                return readPng(filename);
-            else
-                return readPng(filename.idup);
         }
+
+        static if (is(T == string))
+            return readPng(filename);
+        else
+            return readPng(filename);
+
     }
 }
 
