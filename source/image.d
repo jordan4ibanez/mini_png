@@ -64,14 +64,13 @@ public ImageFileFormat guessImageFormatFromMemory(const(void)[] membuf) {
         buf.ptr[3] == 0x47 && buf.ptr[4] == 0x0D && buf.ptr[5] == 0x0A && buf.ptr[6] == 0x1A) {
         return ImageFileFormat.Png;
     }
-    // dunno
     return ImageFileFormat.Unknown;
 }
 
 /// Try to guess image format from file name and load that image.
 public MemoryImage loadImageFromFile(T : const(char)[])(T filename) {
     static if (is(T == typeof(null))) {
-        throw new Exception("cannot load image from unnamed file");
+        throw new Exception("Cannot load image from unnamed file.");
     } else {
         final switch (guessImageFormatFromExtension(filename)) {
         case ImageFileFormat.Unknown:
