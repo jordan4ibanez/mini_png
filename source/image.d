@@ -30,21 +30,23 @@ enum ImageFileFormat {
 }
 
 /// Try to guess image format from file extension.
-public ImageFileFormat guessImageFormatFromExtension(const(char)[] filename) {
+public ImageFileFormat guessImageFormatFromExtension(const(char)[] filename) @nogc {
     if (filename.length < 2)
         return ImageFileFormat.Unknown;
-    size_t extpos = filename.length;
+    ulong position = filename.length;
+
     version (Windows) {
-        while (extpos > 0 && filename.ptr[extpos - 1] != '.' && filename.ptr[extpos - 1] != '/' && filename
-            .ptr[extpos - 1] != '\\' && filename.ptr[extpos - 1] != ':')
-            --extpos;
+        while (position > 0 && filename.ptr[position - 1] != '.' && filename.ptr[position - 1] != '/' && filename
+            .ptr[position - 1] != '\\' && filename.ptr[position - 1] != ':')
+            --position;
     } else {
-        while (extpos > 0 && filename.ptr[extpos - 1] != '.' && filename.ptr[extpos - 1] != '/')
-            --extpos;
+        while (position > 0 && filename.ptr[position - 1] != '.' && filename.ptr[position - 1] != '/')
+            --position;
     }
-    if (extpos == 0 || filename.ptr[extpos - 1] != '.')
+
+    if (position == 0 || filename.ptr[position - 1] != '.')
         return ImageFileFormat.Unknown;
-    auto ext = filename[extpos .. $];
+    immutable(char)[] ext = cast(immutable(char)[]) filename[position .. $];
     if (strEquCI(ext, "png"))
         return ImageFileFormat.Png;
     return ImageFileFormat.Unknown;
