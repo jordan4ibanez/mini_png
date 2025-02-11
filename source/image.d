@@ -7,11 +7,6 @@ public import png;
 
 import core.memory;
 
-static if (__traits(compiles, { import iv.vfs; }))
-    enum ArsdImageHasIVVFS = true;
-else
-    enum ArsdImageHasIVVFS = false;
-
 private bool strEquCI(const(char)[] s0, const(char)[] s1) pure nothrow @trusted @nogc {
     if (s0.length != s1.length)
         return false;
